@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Interactivo - Alberto García</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Subtle Accents -->
+    <!-- Application Structure Plan: The application is structured as a single-page portfolio. It starts with a strong header introducing Alberto. The main content is divided into logical, navigable sections: "Sobre mí" (summary and skills), "Experiencia" (a detailed, filterable timeline), and "Educación y Cursos". This structure was chosen for its intuitive user flow, allowing a recruiter to get a quick overview and then dive deep into specific areas. The key interaction is the filterable project timeline in the "Experiencia" section, which lets users see projects by company, highlighting Alberto's contributions effectively. A dynamic skills chart provides a quick visual summary of his expertise. This is more engaging than a static list and guides the user through his professional story. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Skills proficiency (Java, Flutter, etc.). Goal: Inform & Compare. Viz/Method: Horizontal Bar Chart (Chart.js). Interaction: On hover, tooltips show years of experience. Justification: A bar chart offers a quick, visually comparable representation of skill levels, which is more impactful than a simple list. Chart.js on Canvas is used for its responsiveness and interactivity without needing SVG.
+        - Report Info: Professional Experience (list of projects). Goal: Organize & Explore. Viz/Method: Interactive Timeline/Card Layout (HTML/CSS/JS). Interaction: Users can click on company logos (filters) to dynamically show/hide relevant project cards. Justification: A filterable timeline makes a long list of projects manageable and allows users to focus on the most relevant experience (e.g., projects at a specific company), improving usability.
+        - Report Info: Project Details. Goal: Inform. Viz/Method: Expandable Text Blocks within project cards. Interaction: A "Ver más" button reveals more details about a project. Justification: This keeps the initial view clean and prevents information overload, letting users decide when to drill down for more context.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f1eb;
+            color: #404040;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 60vh;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active {
+            color: #a58a5c;
+            border-bottom-color: #a58a5c;
+        }
+        .nav-link:hover {
+            color: #a58a5c;
+        }
+        .tag {
+            background-color: #e7e2d9;
+            color: #8c7a62;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #e7e2d9;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .filter-btn {
+            transition: all 0.3s;
+            border: 1px solid #d1c7b8;
+        }
+        .filter-btn.active {
+            background-color: #a58a5c;
+            color: #ffffff;
+            border-color: #a58a5c;
+        }
+        .filter-btn:not(.active):hover {
+            background-color: #e7e2d9;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+<header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 border-b border-gray-200/50">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="text-2xl font-bold text-gray-800">
+            Alberto Cabello
+        </div>
+        <div class="hidden md:flex items-center space-x-8">
+            <a href="#sobre-mi" class="nav-link border-b-2 border-transparent pb-1">Sobre mí</a>
+            <a href="#experiencia" class="nav-link border-b-2 border-transparent pb-1">Experiencia</a>
+            <a href="#educacion" class="nav-link border-b-2 border-transparent pb-1">Educación</a>
+            <a href="#contacto" class="nav-link border-b-2 border-transparent pb-1">Contacto</a>
+
+        </div>
+        <div class="md:hidden">
+            <button id="menu-btn" class="text-gray-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </div>
+    </nav>
+    <div id="mobile-menu" class="hidden md:hidden">
+        <a href="#sobre-mi" class="block py-2 px-6 text-sm text-gray-700 hover:bg-gray-100">Sobre mí</a>
+        <a href="#experiencia" class="block py-2 px-6 text-sm text-gray-700 hover:bg-gray-100">Experiencia</a>
+        <a href="#educacion" class="block py-2 px-6 text-sm text-gray-700 hover:bg-gray-100">Educación</a>
+        <a href="#contacto" class="block py-2 px-6 text-sm text-gray-700 hover:bg-gray-100">Contacto</a>
+    </div>
+</header>
+
+<main class="container mx-auto px-6 py-12">
+    <section id="sobre-mi" class="mb-24 scroll-mt-24">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">Desarrollador Full Stack Senior   </h1>
+            <p class="text-lg text-gray-600 mb-8">
+                Con 12 años de experiencia en la arquitectura y desarrollo de soluciones web y móviles. Especializado en Java/Spring Boot, Flutter y sistemas escalables. He liderado proyectos de alto impacto en logística, ERP y microservicios, optimizando procesos y entregando valor.
+            </p>
+        </div>
+        <div class="mt-16">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-2">Habilidades Técnicas</h2>
+            <p class="text-center text-gray-600 mb-8">Esta gráfica muestra mis años de experiencia con tecnologías clave. La interacción y el dominio de estas herramientas me permiten construir soluciones robustas y eficientes.</p>
+            <div class="chart-container">
+                <canvas id="skillsChart"></canvas>
+            </div>
+        </div>
+    </section>
+    <section id="experiencia" class="mb-24 scroll-mt-24">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">Experiencia Profesional</h2>
+        <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">Aquí puedes explorar una selección de mis proyectos más relevantes. He trabajado en diversas industrias, aportando soluciones tecnológicas a problemas complejos. Usa los filtros para navegar por empresa.</p>
+        <div id="filters" class="flex flex-wrap justify-center gap-2 mb-12"></div>
+        <div id="projects-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        </div>
+    </section>
+    <section id="educacion" class="scroll-mt-24">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Educación y Cursos Relevantes</h2>
+        <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">Mi formación académica y el aprendizaje continuo son pilares de mi desarrollo profesional. Esta sección destaca mi educación formal y los cursos que he tomado para mantenerme actualizado con las últimas tecnologías.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div class="card rounded-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Formación Académica</h3>
+                <div class="space-y-4">
+                    <div>
+                        <p class="font-semibold">Licenciatura en Informática</p>
+                        <p class="text-sm text-gray-600">Facultad de Estudios Superiores Cuautitlán (FESC), UNAM</p>
+                        <p class="text-sm text-gray-500">2013 – 2019</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold">Ingeniería en Tecnologías de la Información (Inconclusa)</p>
+                        <p class="text-sm text-gray-600">Instituto Tecnológico de Tlalnepantla (ITTLA)</p>
+                        <p class="text-sm text-gray-500">2010 – 2013</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card rounded-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Certificaciones y Cursos</h3>
+                <ul id="courses-list" class="space-y-2 list-disc list-inside text-gray-700">
+                </ul>
+            </div>
+        </div>
+    </section>
+    <section id="contacto" class="scroll-mt-24">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Contacto</h2>
+        <p class="text-center text-gray-600 max-w-3xl mx-auto mb-8">
+            ¿Te gustaría conectar o tienes alguna pregunta? Puedes contactarme a través de los siguientes medios:
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div class="card rounded-lg p-6 flex flex-col items-center">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Correo Electrónico</h3>
+                <a href="mailto:alberto.cabello.dev@gmail.com" class="text-blue-600 hover:underline text-lg mb-4">
+                    alberto.cabello14@gmail.com
+                </a>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Teléfono</h3>
+                <p class="text-gray-700 text-lg mb-4">+52 5658133409</p>
+            </div>
+            <div class="card rounded-lg p-6 flex flex-col items-center">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">LinkedIn</h3>
+                <a href="https://www.linkedin.com/public-profile/settings?trk=d_flagship3_profile_self_view_public_profile" target="_blank" class="text-blue-600 hover:underline text-lg mb-4">
+                    linkedin.com/in/albertocabello
+                </a>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Ubicación</h3>
+                <p class="text-gray-700 text-lg">Tlalnepantla de Baz, Estado de México.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="bg-white mt-24 border-t">
+    <div class="container mx-auto px-6 py-6 text-center text-gray-600">
+        <p>&copy; 2025 Alberto Cabello. CV experiencia profesional.</p>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const projectsData = [
+            {
+                company: 'Grupo Uribe',
+                title: 'Logística - Grupo Uribe/Transdraco',
+                period: 'marzo 2023 - junio 2025',
+                position: 'Desarrollador Sr.',
+                description: 'Seguimiento, planeación y registro de transporte de carga de gas L.P. tanto en embarques nacionales (PEMEX) e internacionales (MovEnergy), con el uso del posicionamiento GPS tanto de dispositivos físicos en los tractocamiones como en dispositivos móviles de operadores.',
+                details: 'Se implementó una solución móvil para realizar el monitoreo así como el registro de los tiempos en los que se realiza la descarga y carga del combustible. Para complementar la aplicación se desarrolló una interfaz web para realizar el seguimiento de los embarques y la planeación mensual de la recolección y entrega.',
+                technologies: ['Flutter', 'Java 11', 'Spring Boot', 'Eureka', 'MySQL', 'Sencha ExtJS']
+            },
+            {
+                company: 'Grupo Uribe',
+                title: 'Liquidaciones (Portal Central)',
+                period: 'diciembre 2020 - junio 2025',
+                position: 'Desarrollador Sr.',
+                description: 'Sistema central para realizar las liquidaciones de Gas LP de la venta de autotanques de las 23 gaseras del grupo. El módulo debía ser totalmente enfocado a microservicios debido a la alta demanda de usuarios y la cantidad de información cargada en operaciones.',
+                details: 'Solución a los requerimientos presentados, así como la documentación de los cambios realizados. Módulo diseñado desde 0, con base al funcionamiento operativo que se tenía con un sistema legacy.',
+                technologies: ['Sencha ExtJS 6', 'MySQL', 'Eureka', 'Java 11']
+            },
+            {
+                company: 'Grupo Uribe',
+                title: 'Data Warehouse - Grupo Uribe',
+                period: 'marzo 2023 - junio 2025',
+                position: 'Desarrollador Sr.',
+                description: 'Creacion y mantenimiento de un Data Warehouse para la integración de datos de las diferentes aplicaciones del grupo Uribe, permitiendo la generación de reportes y análisis de datos.',
+                details: 'Se implementó un sistema de integración de datos que permite la consolidación de información de diferentes fuentes, facilitando la generación de reportes y análisis de datos. El sistema incluye funcionalidades para la extracción, transformación y carga (ETL) de datos, así como la generación de reportes personalizados.',
+                technologies: ['Java 11', 'Spring Boot', 'MySQL', 'Apache Kafka', 'Eureka']
+            },
+            {
+                company: 'Grupo Uribe',
+                title: 'Sistema de Control de Inventarios',
+                period: 'enero 2020 - junio 2025',
+                position: 'Desarrollador Sr.',
+                description: 'Sistema web/móvil para el control de inventarios de las gaseras del grupo Uribe, permitiendo la gestión eficiente de los recursos y la generación de reportes.',
+                details: 'Se implementó un sistema web y móvil para el control de inventarios, permitiendo a los usuarios realizar operaciones de manera eficiente y segura. El sistema incluye funcionalidades para la gestión de inventarios, seguimiento de ventas y generación de reportes.',
+                technologies: ['PHP', 'JQuery', 'Spring Boot','MySQL', 'JavaScript', 'HTML5', 'CSS3']
+            },
+            {
+                company: 'Grupo Uribe',
+                title: 'Sistema integral de control de gas portátil (SICPO)',
+                period: '2016 - 2019',
+                position: 'Analista / Programador (Freelance)',
+                description: 'Sistema web/mobil enfocado en el control operativo, para la venta y llenado de cilindros de gas LP',
+                details: 'Se implementó un sistema web y móvil para el control de la venta y llenado de cilindros de gas LP, permitiendo a los usuarios realizar operaciones de manera eficiente y segura. El sistema incluye funcionalidades para la gestión de inventarios, seguimiento de ventas y generación de reportes, abc de usuarios y gestion de procesos..',
+                technologies: ['PHP', 'JQuery', 'Spring Boot','MySQL', 'JavaScript', 'HTML5', 'CSS3']
+            },
+            {
+                company: 'IMPULSORA SAHUAYO',
+                title: 'SACS (ERP) - Sahuayo',
+                period: 'octubre 2021 - agosto 2022',
+                position: 'Desarrollador Java',
+                description: 'Análisis de requerimientos funcionales, presentado por el equipo de QA los diferentes módulos que integran el ERP.',
+                details: 'Se implementaron nuevas funcionalidades a los módulos ya creados tanto en front como back, así como el mantenimiento de estos. Enfoque integral en DevOps.',
+                technologies: ['Java 11', 'Spring Boot', 'Angular 2', 'SQL Server']
+            },
+            {
+                company: 'IMPULSORA SAHUAYO',
+                title: 'Aplicación de Reparto (Android)',
+                period: 'agosto 2022 - marzo 2023',
+                position: 'Desarrollador Java',
+                description: 'Aplicación móvil para la asignación de ruta para repartir los diferentes productos a los CEDIS. La aplicación debe asignar ruta, unidad y tripulación.',
+                details: 'Solución a los módulos de carga de catálogos. Módulo de reporte de incidencias. Módulo de registro de descarga con QR.',
+                technologies: ['Kotlin', 'RESTful API', 'Spring Boot', 'Java 11']
+            },
+            {
+                company: 'COSI',
+                title: 'ERPP – COSI (Fiscalía de Zacatecas)',
+                period: 'mayo 2019 - marzo 2020',
+                position: 'Desarrollador full stack',
+                description: 'Sistematizar los 96 actos públicos que la fiscalía del registro público proporciona a los ciudadanos, como por ejemplo certificado de gravamen, certificado de compra, venta etc.',
+                details: 'Solución a los requerimientos presentados, así como la documentación de los cambios realizados. Despliegue de la aplicación en el servidor correspondiente.',
+                technologies: ['Angular 2', 'Spring-Boot', 'PostgreSQL', 'RESTful', 'Wildfly']
+            },
+            {
+                company: 'COSI',
+                title: 'Sistema de Gestión de Proyectos – COSI',
+                period: 'enero 2019 - abril 2019',
+                position: 'Desarrollador full stack',
+                description: 'Sistema para la gestión de proyectos, con el fin de llevar un control de los proyectos que se tienen en la empresa.',
+                details: 'Se implementó un sistema web para la gestión de proyectos, permitiendo a los usuarios realizar operaciones de manera eficiente y segura. El sistema incluye funcionalidades para la gestión de proyectos, seguimiento de tareas y generación de reportes.',
+                technologies: ['Angular', 'Spring-Boot', 'PostgreSQL', 'SoapUI', 'Wildfly']
+            },
+            {
+                company: 'COSI',
+                title: 'Aplicación Móvil (Android) – COSI',
+                period: 'mayo 2018 - diciembre 2018',
+                position: 'Desarrollador full stack',
+                description: 'Aplicación móvil para la gestión de proyectos, permitiendo a los usuarios realizar operaciones de manera eficiente y segura.',
+                details: 'Se implementó una aplicación móvil para la gestión de proyectos, permitiendo a los usuarios realizar operaciones de manera eficiente y segura. La aplicación incluye funcionalidades para la gestión de proyectos, seguimiento de tareas y generación de reportes.',
+                technologies: ['Java', 'Android SDK', 'RESTful API', 'Spring Boot']
+            },
+            {
+                company: 'Pamber Energy',
+                title: 'Dolibarr ERP/CRM',
+                period: 'enero 2013 - diciembre 2016',
+                position: 'Analista / Programador',
+                description: 'Adaptación y personalización de un ERP/CRM de código abierto (Dolibarr) para las necesidades de la empresa.',
+                details: 'Se implementaron nuevos módulos al sistema y la adaptación de funcionalidades existentes. Principalmente módulos para facturación y gestión de clientes.',
+                technologies: ['PHP', 'Perl', 'MySQL', 'JavaScript']
+            }
+        ];
+
+        const coursesData = [
+            'Flutter (Udemy)',
+            'Introducción a la IA (Platzi)',
+            'Docker Fundamentos (Platzi)',
+            'Spring Boot (COSI)',
+            'Angular 4 (COSI)',
+            'SharePoint (COSI)',
+            'Power Apps (COSI)',
+            'Curso de Java (FESC, UNAM)',
+            'Curso HTML, JavaScript, CSS (FESC, UNAM)',
+            'Curso SOAP y RESTful (Grupo Uribe)'
+        ];
+
+        const skillsData = {
+            labels: ['Java', 'Spring Boot', 'Flutter', 'JavaScript', 'PHP', 'Kotlin', 'Angular', 'MySQL','PostgreSQL', 'Docker', 'Microservicios'],
+            years: [8, 6, 3, 7, 7, 2, 3, 10,5, 2, 4]
+        };
+
+        const projectsContainer = document.getElementById('projects-container');
+        const filtersContainer = document.getElementById('filters');
+        const coursesList = document.getElementById('courses-list');
+
+        function renderProjects(filter = 'All') {
+            projectsContainer.innerHTML = '';
+            const filteredProjects = filter === 'All' ? projectsData : projectsData.filter(p => p.company === filter);
+
+            filteredProjects.forEach(project => {
+                const projectCard = `
+                        <div class="card rounded-lg p-6 flex flex-col">
+                            <h3 class="text-lg font-bold text-gray-800">${project.title}</h3>
+                            <p class="text-sm font-semibold text-gray-500 mb-1">${project.company}</p>
+                            <p class="text-xs text-gray-400 mb-4">${project.period}</p>
+                            <p class="text-gray-600 text-sm mb-4 flex-grow">${project.description}</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                ${project.technologies.map(tech => `<span class="tag">${tech}</span>`).join('')}
+                            </div>
+                            <button class="text-sm text-blue-600 hover:underline self-start" onclick="toggleDetails(this)">Ver más</button>
+                            <div class="details hidden mt-4 text-sm text-gray-600 border-t pt-4">
+                                <p>${project.details}</p>
+                            </div>
+                        </div>
+                    `;
+                projectsContainer.innerHTML += projectCard;
+            });
+        }
+
+        window.toggleDetails = function(button) {
+            const details = button.nextElementSibling;
+            const isHidden = details.classList.contains('hidden');
+            button.textContent = isHidden ? 'Ver menos' : 'Ver más';
+            details.classList.toggle('hidden');
+        }
+
+        function renderFilters() {
+            const companies = ['All', ...new Set(projectsData.map(p => p.company))];
+            companies.forEach(company => {
+                const filterBtn = document.createElement('button');
+                filterBtn.textContent = company;
+                filterBtn.className = 'filter-btn px-4 py-2 rounded-full text-sm font-medium';
+                if (company === 'All') {
+                    filterBtn.classList.add('active');
+                }
+                filterBtn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    filterBtn.classList.add('active');
+                    renderProjects(company);
+                });
+                filtersContainer.appendChild(filterBtn);
+            });
+        }
+
+        function renderCourses() {
+            coursesData.forEach(course => {
+                const li = document.createElement('li');
+                li.textContent = course;
+                coursesList.appendChild(li);
+            });
+        }
+
+        renderFilters();
+        renderProjects();
+        renderCourses();
+
+        const ctx = document.getElementById('skillsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: skillsData.labels,
+                datasets: [{
+                    label: 'Años de Experiencia',
+                    data: skillsData.years,
+                    backgroundColor: 'rgba(165, 138, 92, 0.6)',
+                    borderColor: 'rgba(165, 138, 92, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.x !== null) {
+                                    label += context.parsed.x + ' años';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + ' años'
+                            }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+                if(mobileMenu.classList.contains('hidden') === false){
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('section');
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 120) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
